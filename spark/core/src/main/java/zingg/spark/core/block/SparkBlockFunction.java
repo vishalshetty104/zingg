@@ -13,10 +13,16 @@ import zingg.common.core.block.BlockFunction;
 import zingg.common.core.block.Canopy;
 import zingg.common.core.block.Tree;
 
-public class SparkBlockFunction extends BlockFunction<Row> implements MapFunction<Row, Row>{
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataType;
+
+public class SparkBlockFunction extends BlockFunction<Dataset<Row>, Row, Column, DataType> implements MapFunction<Row, Row>{
    
 
-    public SparkBlockFunction(Tree<Canopy<Row>> tree) {
+    public SparkBlockFunction(Tree<Canopy<Dataset<Row>, Row, Column, DataType>> tree) {
         super(tree);
     }
    

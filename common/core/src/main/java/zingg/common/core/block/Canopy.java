@@ -15,12 +15,12 @@ import zingg.common.client.util.ListMap;
 import zingg.common.core.hash.HashFunction;
 
 
-public class Canopy<R> implements Serializable {
+public class Canopy<D,R,C,T> implements Serializable {
 
 	public static final Log LOG = LogFactory.getLog(Canopy.class);
 
 	// created by function edge leading from parent to this node
-	HashFunction function;
+	HashFunction<D,R,C,T> function;
 	// aplied on field
 	FieldDefinition context;
 	// list of duplicates passed from parent
@@ -53,7 +53,7 @@ public class Canopy<R> implements Serializable {
 	/**
 	 * @return the function
 	 */
-	public HashFunction getFunction() {
+	public HashFunction<D,R,C,T> getFunction() {
 		return function;
 	}
 
@@ -61,7 +61,7 @@ public class Canopy<R> implements Serializable {
 	 * @param function
 	 *            the function to set
 	 */
-	public void setFunction(HashFunction function) {
+	public void setFunction(HashFunction<D,R,C,T> function) {
 		this.function = function;
 	}
 
@@ -142,7 +142,7 @@ public class Canopy<R> implements Serializable {
 		this.training = training;
 	}
 
-	public List<Canopy<R>> getCanopies() {
+	public List<Canopy<D,R,C,T>> getCanopies() {
 		//long ts = System.currentTimeMillis();
 		/*
 		List<R> newTraining = function.apply(training, context.fieldName, ColName.HASH_COL).cache();
@@ -166,13 +166,13 @@ public class Canopy<R> implements Serializable {
 		LOG.debug("getCanopies2" + (System.currentTimeMillis() - ts));
 		return returnCanopies;*/
 		ListMap<Object, R> hashes = new ListMap<Object, R>();
-		List<Canopy<R>> returnCanopies = new ArrayList<Canopy<R>>();
+		List<Canopy<D,R,C,T>> returnCanopies = new ArrayList<Canopy<D,R,C,T>>();
 		
 		for (R r : training) {
 			hashes.add(function.apply(r, context.fieldName), r);
 		}
 		for (Object o: hashes.keySet()) {
-			Canopy<R> can = new Canopy<R>(hashes.get(o), dupeRemaining);
+			Canopy<D,R,C,T> can = new Canopy<D,R,C,T>(hashes.get(o), dupeRemaining);
 			can.hash = o;
 			returnCanopies.add(can);
 		}
@@ -284,7 +284,7 @@ public class Canopy<R> implements Serializable {
 		return returnMap;
 	}*/
 
-	public Canopy copyTo(Canopy copyTo) {
+	public Canopy copyTo(Canopy<D,R,C,T> copyTo) {
 		copyTo.function = function;
 		copyTo.context = context;
 		// list of duplicates passed from parent

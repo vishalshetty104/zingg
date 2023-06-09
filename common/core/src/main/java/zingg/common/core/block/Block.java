@@ -103,9 +103,9 @@ public abstract class Block<D,R,C,T> implements Serializable {
 	}
 
 	
-	public Canopy<R>getNodeFromCurrent(Canopy<R>node, HashFunction<D,R,C,T> function,
+	public Canopy<D,R,C,T> getNodeFromCurrent(Canopy<D,R,C,T>node, HashFunction<D,R,C,T> function,
 			FieldDefinition context) {
-		Canopy<R>trial = new Canopy<R>();
+		Canopy<D,R,C,T> trial = new Canopy<D,R,C,T>();
 		trial = node.copyTo(trial);
 		// node.training, node.dupeN, function, context);
 		trial.function = function;
@@ -115,11 +115,11 @@ public abstract class Block<D,R,C,T> implements Serializable {
 
 	public abstract T getDataTypeFromString(String t);
 
-	public Canopy<R>getBestNode(Tree<Canopy<R>> tree, Canopy<R>parent, Canopy<R>node,
+	public Canopy<D,R,C,T>getBestNode(Tree<Canopy<D,R,C,T>> tree, Canopy<D,R,C,T> parent, Canopy<D,R,C,T> node,
 			List<FieldDefinition> fieldsOfInterest) throws Exception {
 		long least = Long.MAX_VALUE;
 		int maxElimination = 0;
-		Canopy<R>best = null;
+		Canopy<D,R,C,T>best = null;
 
 		for (FieldDefinition field : fieldsOfInterest) {
 			LOG.debug("Trying for " + field + " with data type " + field.getDataType() + " and real dt " 
@@ -133,7 +133,7 @@ public abstract class Block<D,R,C,T> implements Serializable {
 			
 			if (functions != null) {
 				
-				for (HashFunction function : functions) {
+				for (HashFunction<D,R,C,T> function : functions) {
 					// /if (!used.contains(field.getIndex(), function) &&
 					if (least ==0) break;//how much better can it get?
 					if (!isFunctionUsed(tree, node, field.fieldName, function) //&&
@@ -142,7 +142,7 @@ public abstract class Block<D,R,C,T> implements Serializable {
 							{
 						LOG.debug("Evaluating field " + field.fieldName
 								+ " and function " + function + " for " + field.dataType);
-						Canopy<R>trial = getNodeFromCurrent(node, function,
+						Canopy<D,R,C,T>trial = getNodeFromCurrent(node, function,
 								context);
 						trial.estimateElimCount();
 						long elimCount = trial.getElimCount();
@@ -204,8 +204,8 @@ public abstract class Block<D,R,C,T> implements Serializable {
 	 * @return
 	 * @throws ZinggClientException 
 	 */
-	public Tree<Canopy<R>> getBlockingTree(Tree<Canopy<R>> tree, Canopy<R>parent,
-			Canopy<R>node, List<FieldDefinition> fieldsOfInterest) throws Exception, ZinggClientException {
+	public Tree<Canopy<D,R,C,T>> getBlockingTree(Tree<Canopy<D,R,C,T>> tree, Canopy<D,R,C,T>parent,
+			Canopy<D,R,C,T>node, List<FieldDefinition> fieldsOfInterest) throws Exception, ZinggClientException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Tree so far ");
 			LOG.debug(tree);
@@ -216,7 +216,7 @@ public abstract class Block<D,R,C,T> implements Serializable {
 		}
 		if (size > maxSize && node.getDupeN() != null && node.getDupeN().size() > 0) {
 			LOG.debug("Size is bigger ");
-			Canopy<R>best = getBestNode(tree, parent, node, fieldsOfInterest);
+			Canopy<D,R,C,T>best = getBestNode(tree, parent, node, fieldsOfInterest);
 			if (best != null) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(" HashFunction is " + best + " and node is " + node);
@@ -226,17 +226,17 @@ public abstract class Block<D,R,C,T> implements Serializable {
 				// best.getFunction());
 				// used.add(1, best.getFunction());
 				if (tree == null && parent == null) {
-					tree = new Tree<Canopy<R>>(node);
+					tree = new Tree<Canopy<D,R,C,T>>(node);
 				} 
 				/*else {
 					// /tree.addLeaf(parent, node);
 					used = new ListMap<Integer, HashFunction>();
 				}*/
-				List<Canopy<R>> canopies = node.getCanopies();
+				List<Canopy<D,R,C,T>> canopies = node.getCanopies();
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(" Children size is " + canopies.size());
 				}
-				for (Canopy<R>n : canopies) {
+				for (Canopy<D,R,C,T>n : canopies) {
 					node.clearBeforeSaving();
 					tree.addLeaf(node, n);
 					if (LOG.isDebugEnabled()) {
@@ -266,7 +266,7 @@ public abstract class Block<D,R,C,T> implements Serializable {
 		return tree;
 	}
 
-	public boolean checkFunctionInNode(Canopy<R>node, String name,
+	public boolean checkFunctionInNode(Canopy<D,R,C,T>node, String name,
 			HashFunction function) {
 		if (node.getFunction() != null && node.getFunction().equals(function)
 				&& node.context.fieldName.equals(name)) {
@@ -275,7 +275,7 @@ public abstract class Block<D,R,C,T> implements Serializable {
 		return false;
 	}
 
-	public boolean isFunctionUsed(Tree<Canopy<R>> tree, Canopy<R>node, String fieldName,
+	public boolean isFunctionUsed(Tree<Canopy<D,R,C,T>> tree, Canopy<D,R,C,T>node, String fieldName,
 			HashFunction function) {
 		// //LOG.debug("Tree " + tree);
 		// //LOG.debug("Node  " + node);
@@ -286,17 +286,17 @@ public abstract class Block<D,R,C,T> implements Serializable {
 			return false;
 		if (checkFunctionInNode(node, fieldName, function))
 			return true;
-		Tree<Canopy<R>> nodeTree = tree.getTree(node);
+		Tree<Canopy<D,R,C,T>> nodeTree = tree.getTree(node);
 		if (nodeTree == null)
 			return false;
 
-		Tree<Canopy<R>> parent = nodeTree.getParent();
+		Tree<Canopy<D,R,C,T>> parent = nodeTree.getParent();
 		if (parent != null) {
-			Canopy<R>head = parent.getHead();
+			Canopy<D,R,C,T>head = parent.getHead();
 			while (head != null) {
 				// check siblings of node
-				/*for (Tree<Canopy<R>> siblings : parent.getSubTrees()) {
-					Canopy<R>sibling = siblings.getHead();
+				/*for (Tree<Canopy<D,R,C,T>> siblings : parent.getSubTrees()) {
+					Canopy<D,R,C,T>sibling = siblings.getHead();
 					if (checkFunctionInNode(sibling, index, function))
 						return true;
 				}*/
@@ -308,9 +308,9 @@ public abstract class Block<D,R,C,T> implements Serializable {
 	}
 	
 	
-	public List<Canopy<R>> getHashSuccessors(Collection<Canopy<R>> successors, Object hash) {
-		List<Canopy<R>> retCanopy = new ArrayList<Canopy<R>>();
-		for (Canopy<R>c: successors) {
+	public List<Canopy<D,R,C,T>> getHashSuccessors(Collection<Canopy<D,R,C,T>> successors, Object hash) {
+		List<Canopy<D,R,C,T>> retCanopy = new ArrayList<Canopy<D,R,C,T>>();
+		for (Canopy<D,R,C,T>c: successors) {
 			if (hash == null && c!= null && c.getHash() == null) retCanopy.add(c);
 			if (c!= null && c.getHash() != null && c.getHash().equals(hash)) {
 				retCanopy.add(c);
@@ -319,14 +319,14 @@ public abstract class Block<D,R,C,T> implements Serializable {
 		return retCanopy;
 	}
 
-	/*public static StringBuilder applyTree(Row tuple, Tree<Canopy<R>> tree,
-			Canopy<R>root, StringBuilder result) {
+	/*public static StringBuilder applyTree(Row tuple, Tree<Canopy<D,R,C,T>> tree,
+			Canopy<D,R,C,T>root, StringBuilder result) {
 		LOG.debug("Applying root " + root + " on " + tuple);
 		if (root.function != null) {
 			Object hash = root.function.apply(tuple, root.context.fieldName);
 			LOG.debug("Applied root " + root + " and got " + hash);
 			result = result.append("|").append(hash);
-			for (Canopy<R>c : getHashSuccessors(tree.getSuccessors(root), hash)) {
+			for (Canopy<D,R,C,T>c : getHashSuccessors(tree.getSuccessors(root), hash)) {
 				// LOG.info("Successr hash " + c.getHash() + " and our hash "+
 				// hash);
 				if (c != null) {
@@ -345,34 +345,10 @@ public abstract class Block<D,R,C,T> implements Serializable {
 		return result;
 	}*/
 	
-	public static <R> StringBuilder applyTree(R tuple, Tree<Canopy<R>> tree,
-			Canopy<R>root, StringBuilder result) {
-		if (root.function != null) {
-			Object hash = root.function.apply(tuple, root.context.fieldName);
-			
-			result = result.append("|").append(hash);
-			for (Canopy<R>c : tree.getSuccessors(root)) {
-				// LOG.info("Successr hash " + c.getHash() + " and our hash "+
-				// hash);
-				if (c != null) {
-					// //LOG.debug("c.hash " + c.getHash() + " and our hash " + hash);
-					if ((c.getHash() != null)) {
-						//LOG.debug("Hurdle one over ");
-						if ((c.getHash().equals(hash))) {
-							// //LOG.debug("Hurdle 2 start " + c);
-							applyTree(tuple, tree, c, result);
-							// //LOG.debug("Hurdle 2 over ");
-						}
-					}
-				}
-			}
-		}
-		//LOG.debug("apply first step clustering result " + result);
-		return result;
-	}
+	
 
-	public void printTree(Tree<Canopy<R>> tree,
-			Canopy<R>root) {
+	public void printTree(Tree<Canopy<D,R,C,T>> tree,
+			Canopy<D,R,C,T>root) {
 		if (root.dupeN != null) {
 			LOG.info(" dupeN not null " + root);
 			LOG.info(root.dupeN.size());
@@ -387,7 +363,7 @@ public abstract class Block<D,R,C,T> implements Serializable {
 			LOG.info(" training not null " + root);
 			LOG.info(root.training.size());
 		}
-		for (Canopy<R>c : tree.getSuccessors(root)) {
+		for (Canopy<D,R,C,T>c : tree.getSuccessors(root)) {
 			printTree(tree, c);
 		}			
 	}

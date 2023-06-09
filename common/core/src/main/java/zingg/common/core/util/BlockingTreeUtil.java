@@ -41,7 +41,7 @@ public abstract class BlockingTreeUtil<S, D,R,C,T> {
 		ListMap<T, HashFunction<D,R,C,T>>hashFunctions, long blockSize);
 
 
-	public Tree<Canopy<R>> createBlockingTree(ZFrame<D,R,C> testData,  
+	public Tree<Canopy<D,R,C,T>> createBlockingTree(ZFrame<D,R,C> testData,  
 			ZFrame<D,R,C> positives, double sampleFraction, long blockSize,
             Arguments args,
 			ListMap<T, HashFunction<D,R,C,T>> hashFunctions) throws Exception, ZinggClientException {
@@ -57,7 +57,7 @@ public abstract class BlockingTreeUtil<S, D,R,C,T> {
        
 		positives = positives.coalesce(1); 
 		Block<D,R,C,T> cblock = getBlock(sample, positives, hashFunctions, blockSize);
-		Canopy<R> root = new Canopy<R>(sample.collectAsList(), positives.collectAsList());
+		Canopy<D,R,C,T> root = new Canopy<D,R,C,T>(sample.collectAsList(), positives.collectAsList());
 
 		List<FieldDefinition> fd = new ArrayList<FieldDefinition> ();
 
@@ -67,7 +67,7 @@ public abstract class BlockingTreeUtil<S, D,R,C,T> {
 			}
 		}
 
-		Tree<Canopy<R>> blockingTree = cblock.getBlockingTree(null, null, root,
+		Tree<Canopy<D,R,C,T>> blockingTree = cblock.getBlockingTree(null, null, root,
 				fd);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("The blocking tree is ");
@@ -80,14 +80,14 @@ public abstract class BlockingTreeUtil<S, D,R,C,T> {
 
 	
 	
-	public  Tree<Canopy<R>> createBlockingTreeFromSample(ZFrame<D,R,C> testData,  
+	public  Tree<Canopy<D,R,C,T>> createBlockingTreeFromSample(ZFrame<D,R,C> testData,  
 			ZFrame<D,R,C> positives, double sampleFraction, long blockSize, Arguments args, 
             ListMap hashFunctions) throws Exception, ZinggClientException {
 		ZFrame<D,R,C> sample = testData.sample(false, sampleFraction); 
 		return createBlockingTree(sample, positives, sampleFraction, blockSize, args, hashFunctions);
 	}
 	
-	public void writeBlockingTree(Tree<Canopy<R>> blockingTree, Arguments args) throws Exception, ZinggClientException {
+	public void writeBlockingTree(Tree<Canopy<D,R,C,T>> blockingTree, Arguments args) throws Exception, ZinggClientException {
 		byte[] byteArray  = Util.convertObjectIntoByteArray(blockingTree);
         PipeUtilBase<S, D, R, C> pu = getPipeUtil();
         pu.write(getTreeDF(byteArray), args, pu.getBlockingTreePipe(args));
@@ -102,21 +102,21 @@ public abstract class BlockingTreeUtil<S, D,R,C,T> {
 	}
 
 
-	public Tree<Canopy<R>> readBlockingTree(Arguments args) throws Exception, ZinggClientException{
+	public Tree<Canopy<D,R,C,T>> readBlockingTree(Arguments args) throws Exception, ZinggClientException{
 		PipeUtilBase<S, D, R, C> pu = getPipeUtil();
         ZFrame<D, R, C> tree = pu.read(false, 1, false, pu.getBlockingTreePipe(args));
         //tree.show();
         //tree.df().show();
         //byte [] byteArrayBack = (byte[]) tree.df().head().get(0);
 		byte[] byteArrayBack = getTreeFromDF(tree);
-        Tree<Canopy<R>> blockingTree = null;
+        Tree<Canopy<D,R,C,T>> blockingTree = null;
         LOG.warn("byte array back is " + byteArrayBack);
-        blockingTree =  (Tree<Canopy<R>>) Util.revertObjectFromByteArray(byteArrayBack);
+        blockingTree =  (Tree<Canopy<D,R,C,T>>) Util.revertObjectFromByteArray(byteArrayBack);
         return blockingTree;
 	}
 	
 
-	public abstract ZFrame<D,R,C> getBlockHashes(ZFrame<D,R,C> testData, Tree<Canopy<R>> tree);
+	public abstract ZFrame<D,R,C> getBlockHashes(ZFrame<D,R,C> testData, Tree<Canopy<D,R,C,T>> tree);
 	//.map(new Block<D,R,C,T>().BlockFunction(tree), RowEncoder.apply(Block<D,R,C,T>.appendHashCol(sample.schema())));
 	
 }
