@@ -37,7 +37,7 @@ public abstract class BlockFunction<D,R,C,T> implements Serializable {
         return getRowFromList(currentRowValues);
     }
 
-    public <R> StringBuilder applyTree(R tuple, Tree<Canopy<D,R,C,T>> tree,
+    public StringBuilder applyTree(R tuple, Tree<Canopy<D,R,C,T>> tree,
 			Canopy<D,R,C,T>root, StringBuilder result) {
 		if (root.function != null) {
 			Object hash = root.function.apply(tuple, root.context.fieldName);
